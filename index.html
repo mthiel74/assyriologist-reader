@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Assyriologist — Cuneiform Reader</title>
+<meta name="description" content="Browse ~19,700 machine-translated Akkadian/Sumerian cuneiform texts. Full-text search, filter by period, genre and site. Unvetted machine translations — leads, not citable readings.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Cuneiform&family=Noto+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2b2118; --paper:#f4efe6; --card:#fbf8f1; --line:#d9cdb6;
+    --accent:#7a3b16; --accent2:#a9601f; --muted:#7c6f5c; --tablet:#efe7d6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Noto Serif",Georgia,serif;line-height:1.5;}
+  header{background:linear-gradient(180deg,#3a2614,#5a3a1c);color:#f4ead8;
+    padding:18px 20px 16px;border-bottom:3px solid var(--accent);}
+  header h1{margin:0 0 2px;font-size:1.5rem;letter-spacing:.3px;}
+  header .cunei-title{font-family:"Noto Sans Cuneiform";font-size:1.4rem;opacity:.85;}
+  header p{margin:6px 0 0;font-size:.9rem;color:#e6d6bd;max-width:70ch;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 16px;}
+  .caveat{background:#fbeede;border:1px solid #e6c79a;color:#7a3b16;
+    border-radius:8px;padding:9px 13px;margin:14px auto;font-size:.86rem;max-width:1000px;}
+  .caveat b{color:#5a2a0e;}
+  .controls{position:sticky;top:0;z-index:5;background:var(--paper);
+    padding:12px 0 10px;border-bottom:1px solid var(--line);}
+  .controls .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  #q{flex:1 1 260px;min-width:200px;padding:9px 12px;font-size:1rem;
+    border:1px solid var(--line);border-radius:7px;background:#fff;font-family:inherit;}
+  select{padding:8px 9px;border:1px solid var(--line);border-radius:7px;
+    background:#fff;font-family:inherit;font-size:.85rem;max-width:230px;}
+  button{padding:9px 15px;border:0;border-radius:7px;background:var(--accent);
+    color:#fff;font-size:.92rem;cursor:pointer;font-family:inherit;}
+  button:hover{background:var(--accent2);}
+  button:disabled{background:#bbab92;cursor:default;}
+  .status{font-size:.85rem;color:var(--muted);margin:10px 2px;min-height:1.2em;}
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent2);
+    border-radius:8px;padding:14px 16px;margin:12px 0;}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center;}
+  .badge{font-size:.72rem;background:#ece0c8;color:#5d4a2c;border-radius:11px;
+    padding:2px 9px;white-space:nowrap;}
+  .badge.id{background:#3a2614;color:#f0e2c8;font-family:ui-monospace,monospace;}
+  .cunei{font-family:"Noto Sans Cuneiform";font-size:1.5rem;line-height:1.9;
+    background:var(--tablet);border-radius:6px;padding:10px 13px;margin:4px 0 10px;
+    color:#43352099;word-break:break-word;}
+  .tr{font-size:1rem;white-space:pre-wrap;}
+  details{margin-top:9px;}
+  summary{cursor:pointer;font-size:.82rem;color:var(--accent);}
+  .translit{font-size:.85rem;color:#5d5340;white-space:pre-wrap;margin-top:6px;
+    font-style:italic;border-top:1px dashed var(--line);padding-top:7px;}
+  .ebl{font-size:.78rem;margin-top:8px;}
+  .ebl a{color:var(--accent);}
+  mark{background:#f6dd9a;color:inherit;padding:0 1px;border-radius:2px;}
+  .pager{display:flex;gap:10px;align-items:center;justify-content:center;
+    margin:18px 0 40px;font-size:.9rem;}
+  footer{border-top:1px solid var(--line);padding:18px 16px 40px;color:var(--muted);
+    font-size:.8rem;text-align:center;}
+  footer a{color:var(--accent);}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid #cdbfa5;
+    border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;
+    vertical-align:-2px;margin-right:6px;}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>The Assyriologist <span class="cunei-title">𒀝𒅗𒁺𒌑𒌝</span></h1>
+    <p>A searchable reader for <b id="hdr-count">~19,700</b> machine-translated Akkadian &amp; Sumerian
+       cuneiform texts. Search the English, filter by period, genre and site, and read the
+       cuneiform alongside its draft translation.</p>
+  </div>
+</header>
+
+<div class="caveat wrap">
+  ⚠ <b>These are unvetted machine translations</b> — research leads, <i>not</i> citable scholarly
+  readings. They are produced by fine-tuned language models and frequently contain errors,
+  especially on broken or fragmentary tablets. Always verify against the cuneiform and the
+  primary editions (eBL / ORACC) before relying on any reading.
+</div>
+
+<div class="wrap">
+  <div class="controls">
+    <div class="row">
+      <input id="q" type="search" placeholder="Search the English / transliteration — e.g. king dream eclipse" autocomplete="off" disabled>
+      <select id="f-period" disabled><option value="">All periods</option></select>
+      <select id="f-genre" disabled><option value="">All genres</option></select>
+      <select id="f-site" disabled><option value="">All sites</option></select>
+      <button id="go" disabled>Search</button>
+    </div>
+  </div>
+  <div class="status" id="status"><span class="spin"></span>Loading the tablet database…</div>
+  <div id="results"></div>
+  <div class="pager" id="pager" style="display:none">
+    <button id="prev">‹ Prev</button>
+    <span id="pageinfo"></span>
+    <button id="next">Next ›</button>
+  </div>
+</div>
+
+<footer class="wrap">
+  Part of <b>The Assyriologist</b> — an Akkadian→English translation &amp; analysis project
+  (a three-part Wolfram&nbsp;Community series). Data: the electronic Babylonian Library
+  (<a href="https://www.ebl.lmu.de/" target="_blank" rel="noopener">eBL</a>) and
+  <a href="https://oracc.museum.upenn.edu/" target="_blank" rel="noopener">ORACC</a>;
+  translations by fine-tuned LLMs (Gemma&nbsp;/&nbsp;Mistral).
+  Cuneiform rendered with <a href="https://fonts.google.com/noto/specimen/Noto+Sans+Cuneiform" target="_blank" rel="noopener">Noto&nbsp;Sans&nbsp;Cuneiform</a>.
+  Runs entirely in your browser (static SQLite via sql.js-httpvfs) — no server, nothing tracked.
+</footer>
+
+<script src="vendor/index.js"></script>
+<script>
+const PAGE = 25;
+let worker = null, offset = 0, total = 0, lastParams = null, lastFrom = null, lastWhere = null, lastOrder = null;
+const $ = id => document.getElementById(id);
+const esc = s => (s||"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+// Build an FTS5 MATCH string: each word becomes a prefix token (king -> king*),
+// joined by space = implicit AND. Accented transliteration letters are kept.
+function ftsQuery(q){
+  const toks = (q.match(/[\p{L}\p{N}]+/gu) || []).map(t => '"' + t + '"*');
+  return toks.join(" ");
+}
+function highlight(text, q){
+  const toks = (q.match(/[\p{L}\p{N}]+/gu) || []);
+  let html = esc(text);
+  if(!toks.length) return html;
+  const re = new RegExp("(" + toks.map(t => t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|") + ")", "giu");
+  return html.replace(re, "<mark>$1</mark>");
+}
+
+async function setup(){
+  // URLs fetched inside the worker (the .sqlite and .wasm) must be ABSOLUTE — relative
+  // paths there resolve against the worker's own location (vendor/), not the page.
+  const abs = p => new URL(p, location.href).href;
+  worker = await createDbWorker(
+    [{ from: "inline", config: { serverMode: "full", requestChunkSize: 4096, url: abs("reader.sqlite") } }],
+    abs("vendor/sqlite.worker.js"), abs("vendor/sql-wasm.wasm"));
+  // header count + facets
+  const n = (await worker.db.query("SELECT v FROM meta WHERE k='n_texts'"))[0].v;
+  $("hdr-count").textContent = Number(n).toLocaleString();
+  await fillFacet("f-period", "period");
+  await fillFacet("f-genre",  "genre_short");
+  await fillFacet("f-site",   "site");
+  ["q","f-period","f-genre","f-site","go"].forEach(id => $(id).disabled = false);
+  bind();
+  applyURL();              // restore a shared search (?q=&period=&genre=&site=)
+  await search();          // initial browse / restored search
+}
+
+// shareable searches: ?q=, ?period=, ?genre=, ?site=
+function applyURL(){
+  const p = new URLSearchParams(location.search);
+  $("q").value = p.get("q") || "";
+  for(const [id,key] of [["f-period","period"],["f-genre","genre"],["f-site","site"]]){
+    const v = p.get(key); if(v && [...$(id).options].some(o => o.value===v)) $(id).value = v;
+  }
+}
+function syncURL(){
+  const p = new URLSearchParams();
+  if($("q").value.trim()) p.set("q", $("q").value.trim());
+  for(const [id,key] of [["f-period","period"],["f-genre","genre"],["f-site","site"]])
+    if($(id).value) p.set(key, $(id).value);
+  const qs = p.toString();
+  history.replaceState(null, "", qs ? "?"+qs : location.pathname);
+}
+
+async function fillFacet(selId, col){
+  const rows = await worker.db.query(
+    `SELECT ${col} v, COUNT(*) c FROM texts WHERE ${col}<>'' AND ${col} IS NOT NULL GROUP BY ${col} ORDER BY c DESC`);
+  const sel = $(selId);
+  for(const r of rows){
+    const o = document.createElement("option");
+    o.value = r.v; o.textContent = `${r.v} (${r.c.toLocaleString()})`;
+    sel.appendChild(o);
+  }
+}
+
+function buildWhere(){
+  const q = $("q").value.trim();
+  const where = [], params = [];
+  let from = "texts t", order = "ORDER BY t.rowid";
+  if(q){
+    from = "texts_fts f JOIN texts t ON t.rowid=f.rowid";
+    where.push("texts_fts MATCH ?"); params.push(ftsQuery(q));
+    order = "ORDER BY f.rank";
+  }
+  for(const [id,col] of [["f-period","period"],["f-genre","genre_short"],["f-site","site"]]){
+    const v = $(id).value;
+    if(v){ where.push(`t.${col} = ?`); params.push(v); }
+  }
+  return { from, where: where.length ? "WHERE "+where.join(" AND ") : "", params, order };
+}
+
+async function search(reset=true){
+  if(reset){ offset = 0; syncURL(); }
+  $("status").innerHTML = '<span class="spin"></span>Searching…';
+  $("go").disabled = true;
+  const q = $("q").value.trim();
+  const { from, where, params, order } = buildWhere();
+  try{
+    const cnt = await worker.db.query(`SELECT COUNT(*) c FROM ${from} ${where}`, params);
+    total = cnt[0].c;
+    const rows = await worker.db.query(
+      `SELECT t.id,t.period,t.site,t.genre_short,t.n_lines,t.translation,t.cuneiform,t.transliteration
+       FROM ${from} ${where} ${order} LIMIT ${PAGE} OFFSET ${offset}`, params);
+    render(rows, q);
+  }catch(e){
+    $("status").textContent = "Query error: " + e;
+    $("results").innerHTML = "";
+  }finally{ $("go").disabled = false; }
+}
+
+function render(rows, q){
+  const r = $("results"); r.innerHTML = "";
+  if(!total){
+    $("status").textContent = "No texts match — try fewer or broader terms.";
+    $("pager").style.display = "none"; return;
+  }
+  const from1 = offset+1, to = Math.min(offset+PAGE, total);
+  $("status").innerHTML = `Showing <b>${from1.toLocaleString()}–${to.toLocaleString()}</b> of <b>${total.toLocaleString()}</b> texts`;
+  for(const t of rows){
+    const card = document.createElement("div"); card.className = "card";
+    const badges = [`<span class="badge id">${esc(t.id)}</span>`];
+    if(t.period) badges.push(`<span class="badge">${esc(t.period)}</span>`);
+    if(t.genre_short) badges.push(`<span class="badge">${esc(t.genre_short)}</span>`);
+    if(t.site && t.site!=="?") badges.push(`<span class="badge">${esc(t.site)}</span>`);
+    if(t.n_lines) badges.push(`<span class="badge">${t.n_lines} lines</span>`);
+    const eblUrl = "https://www.ebl.lmu.de/library/" + encodeURIComponent(t.id);
+    card.innerHTML =
+      `<div class="badges">${badges.join("")}</div>` +
+      (t.cuneiform ? `<div class="cunei">${esc(t.cuneiform)}</div>` : "") +
+      `<div class="tr">${highlight(t.translation, q)}</div>` +
+      (t.transliteration ? `<details><summary>Transliteration</summary><div class="translit">${highlight(t.transliteration, q)}</div></details>` : "") +
+      `<div class="ebl"><a href="${eblUrl}" target="_blank" rel="noopener">Look up ${esc(t.id)} on eBL ↗</a></div>`;
+    r.appendChild(card);
+  }
+  $("pager").style.display = total > PAGE ? "flex" : "none";
+  $("pageinfo").textContent = `Page ${Math.floor(offset/PAGE)+1} of ${Math.ceil(total/PAGE)}`;
+  $("prev").disabled = offset === 0;
+  $("next").disabled = offset + PAGE >= total;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function bind(){
+  $("go").onclick = () => search(true);
+  $("q").addEventListener("keydown", e => { if(e.key==="Enter") search(true); });
+  for(const id of ["f-period","f-genre","f-site"]) $(id).onchange = () => search(true);
+  $("prev").onclick = () => { if(offset>0){ offset-=PAGE; search(false); } };
+  $("next").onclick = () => { if(offset+PAGE<total){ offset+=PAGE; search(false); } };
+}
+
+setup().catch(e => { $("status").textContent = "Failed to load database: " + e; });
+</script>
+</body>
+</html>
