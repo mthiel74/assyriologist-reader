@@ -108,21 +108,24 @@
   <a href="https://oracc.museum.upenn.edu/" target="_blank" rel="noopener">ORACC</a>;
   translations by fine-tuned LLMs (Gemma&nbsp;/&nbsp;Mistral).
   Cuneiform rendered with <a href="https://fonts.google.com/noto/specimen/Noto+Sans+Cuneiform" target="_blank" rel="noopener">Noto&nbsp;Sans&nbsp;Cuneiform</a>.
-  Runs entirely in your browser (static SQLite via sql.js-httpvfs) — no server, nothing tracked.
+  Runs entirely in your browser (the whole SQLite database loads once via sql.js) — no server, nothing tracked.
 </footer>
 
-<script src="vendor/index.js"></script>
+<script src="vendor/sql-wasm.js"></script>
 <script>
 const PAGE = 25;
-let worker = null, offset = 0, total = 0, lastParams = null, lastFrom = null, lastWhere = null, lastOrder = null;
+let db = null, offset = 0, total = 0;
 const $ = id => document.getElementById(id);
 const esc = s => (s||"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
-// Build an FTS5 MATCH string: each word becomes a prefix token (king -> king*),
-// joined by space = implicit AND. Accented transliteration letters are kept.
-function ftsQuery(q){
-  const toks = (q.match(/[\p{L}\p{N}]+/gu) || []).map(t => '"' + t + '"*');
-  return toks.join(" ");
+// synchronous in-memory query (plain sql.js) -> array of row objects
+function query(sql, params){
+  const stmt = db.prepare(sql);
+  if(params && params.length) stmt.bind(params);
+  const out = [];
+  while(stmt.step()) out.push(stmt.getAsObject());
+  stmt.free();
+  return out;
 }
 function highlight(text, q){
   const toks = (q.match(/[\p{L}\p{N}]+/gu) || []);
@@ -133,22 +136,38 @@ function highlight(text, q){
 }
 
 async function setup(){
-  // URLs fetched inside the worker (the .sqlite and .wasm) must be ABSOLUTE — relative
-  // paths there resolve against the worker's own location (vendor/), not the page.
-  const abs = p => new URL(p, location.href).href;
-  worker = await createDbWorker(
-    [{ from: "inline", config: { serverMode: "full", requestChunkSize: 4096, url: abs("reader.sqlite") } }],
-    abs("vendor/sqlite.worker.js"), abs("vendor/sql-wasm.wasm"));
-  // header count + facets
-  const n = (await worker.db.query("SELECT v FROM meta WHERE k='n_texts'"))[0].v;
+  // Load the whole SQLite into memory once (plain sql.js). GitHub Pages gzips the
+  // file, so the browser downloads ~12 MB and decompresses to the full DB; every
+  // query then runs locally with no further network and no range requests.
+  const SQL = await initSqlJs({ locateFile: () => "vendor/sqljs-wasm.wasm" });
+  const buf = await fetchWithProgress("reader.sqlite");
+  $("status").innerHTML = '<span class="spin"></span>Preparing database…';
+  db = new SQL.Database(new Uint8Array(buf));
+  const n = query("SELECT v FROM meta WHERE k='n_texts'")[0].v;
   $("hdr-count").textContent = Number(n).toLocaleString();
-  await fillFacet("f-period", "period");
-  await fillFacet("f-genre",  "genre_short");
-  await fillFacet("f-site",   "site");
+  fillFacet("f-period", "period");
+  fillFacet("f-genre",  "genre_short");
+  fillFacet("f-site",   "site");
   ["q","f-period","f-genre","f-site","go"].forEach(id => $(id).disabled = false);
   bind();
   applyURL();              // restore a shared search (?q=&period=&genre=&site=)
-  await search();          // initial browse / restored search
+  search();                // initial browse / restored search
+}
+
+async function fetchWithProgress(url){
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error("HTTP " + resp.status);
+  const reader = resp.body.getReader();
+  const chunks = []; let received = 0;
+  for(;;){
+    const { done, value } = await reader.read();
+    if(done) break;
+    chunks.push(value); received += value.length;
+    $("status").innerHTML = `<span class="spin"></span>Downloading the tablet database… ${(received/1e6).toFixed(1)} MB`;
+  }
+  const all = new Uint8Array(received); let pos = 0;
+  for(const c of chunks){ all.set(c, pos); pos += c.length; }
+  return all.buffer;
 }
 
 // shareable searches: ?q=, ?period=, ?genre=, ?site=
@@ -168,8 +187,8 @@ function syncURL(){
   history.replaceState(null, "", qs ? "?"+qs : location.pathname);
 }
 
-async function fillFacet(selId, col){
-  const rows = await worker.db.query(
+function fillFacet(selId, col){
+  const rows = query(
     `SELECT ${col} v, COUNT(*) c FROM texts WHERE ${col}<>'' AND ${col} IS NOT NULL GROUP BY ${col} ORDER BY c DESC`);
   const sel = $(selId);
   for(const r of rows){
@@ -182,31 +201,31 @@ async function fillFacet(selId, col){
 function buildWhere(){
   const q = $("q").value.trim();
   const where = [], params = [];
-  let from = "texts t", order = "ORDER BY t.rowid";
+  // each word is matched (case-insensitive) against translation OR transliteration;
+  // words are AND-ed. In-memory LIKE scan over ~19.7k rows is effectively instant.
   if(q){
-    from = "texts_fts f JOIN texts t ON t.rowid=f.rowid";
-    where.push("texts_fts MATCH ?"); params.push(ftsQuery(q));
-    order = "ORDER BY f.rank";
+    for(const tk of (q.match(/[\p{L}\p{N}]+/gu) || [])){
+      where.push("(t.translation LIKE ? OR t.transliteration LIKE ?)");
+      params.push("%"+tk+"%", "%"+tk+"%");
+    }
   }
   for(const [id,col] of [["f-period","period"],["f-genre","genre_short"],["f-site","site"]]){
     const v = $(id).value;
     if(v){ where.push(`t.${col} = ?`); params.push(v); }
   }
-  return { from, where: where.length ? "WHERE "+where.join(" AND ") : "", params, order };
+  return { where: where.length ? "WHERE "+where.join(" AND ") : "", params };
 }
 
-async function search(reset=true){
+function search(reset=true){
   if(reset){ offset = 0; syncURL(); }
-  $("status").innerHTML = '<span class="spin"></span>Searching…';
   $("go").disabled = true;
   const q = $("q").value.trim();
-  const { from, where, params, order } = buildWhere();
+  const { where, params } = buildWhere();
   try{
-    const cnt = await worker.db.query(`SELECT COUNT(*) c FROM ${from} ${where}`, params);
-    total = cnt[0].c;
-    const rows = await worker.db.query(
+    total = query(`SELECT COUNT(*) c FROM texts t ${where}`, params)[0].c;
+    const rows = query(
       `SELECT t.id,t.period,t.site,t.genre_short,t.n_lines,t.translation,t.cuneiform,t.transliteration
-       FROM ${from} ${where} ${order} LIMIT ${PAGE} OFFSET ${offset}`, params);
+       FROM texts t ${where} ORDER BY t.rowid LIMIT ${PAGE} OFFSET ${offset}`, params);
     render(rows, q);
   }catch(e){
     $("status").textContent = "Query error: " + e;

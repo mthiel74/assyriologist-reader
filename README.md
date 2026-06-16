@@ -15,10 +15,10 @@ and site, and read the cuneiform alongside its draft translation.
 
 Everything runs in your browser — there is **no server and nothing is tracked**:
 
-- `reader.sqlite` — all texts in one SQLite file with an FTS5 full-text index.
-- [`sql.js-httpvfs`](https://github.com/phiresky/sql.js-httpvfs) queries the SQLite
-  file directly from static hosting via HTTP range requests, downloading only the
-  pages each query touches.
+- `reader.sqlite` — all texts in one SQLite file (~40 MB, ~12 MB gzipped).
+- [`sql.js`](https://github.com/sql-js/sql.js) loads the whole database into memory
+  once (the browser downloads it gzipped and decompresses it), then runs every
+  search locally — no backend, no further network.
 - Cuneiform is rendered with the
   [Noto Sans Cuneiform](https://fonts.google.com/noto/specimen/Noto+Sans+Cuneiform)
   webfont.
