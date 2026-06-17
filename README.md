@@ -28,11 +28,23 @@ Searches are shareable via URL, e.g.
 
 ## Data & credits
 
-- Texts: the [electronic Babylonian Library (eBL)](https://www.ebl.lmu.de/) and
-  [ORACC](https://oracc.museum.upenn.edu/).
+- Texts (transliterations + metadata): the
+  [electronic Babylonian Library (eBL)](https://www.ebl.lmu.de/), Jiménez et al.,
+  LMU Munich, **CC BY-NC-SA 4.0**; and [ORACC](https://oracc.org/), **CC BY-SA 3.0**.
+  No eBL tablet images are included. Each text deep-links to its eBL edition page.
 - Translations: fine-tuned LLMs (Gemma / Mistral), following the approach of
   Gutherz et al. (2023), *Translating Akkadian to English with neural machine
   translation*, PNAS Nexus.
+
+## License
+
+Text data is reused with attribution for **non-commercial** use under the source
+terms (eBL CC BY-NC-SA 4.0, ORACC CC BY-SA 3.0). Because it incorporates eBL's
+CC BY-NC-SA 4.0 material, the combined dataset (`reader.sqlite`) is shared under
+[**CC BY-NC-SA 4.0**](https://creativecommons.org/licenses/by-nc-sa/4.0/) —
+non-commercial, share-alike, attribution required. The site code is MIT; the
+vendored `sql.js` is MIT. See [LICENSE](LICENSE) for the full statement and the
+per-edition citation format.
 
 Part of **The Assyriologist** — an Akkadian→English translation & analysis project
 (a three-part Wolfram Community series).
